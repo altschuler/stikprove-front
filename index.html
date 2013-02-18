@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" ng-app="Site"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Stikprøve</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <!-- allows crawling in html5 location mode -->
+    <meta name="fragment" content="!">
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/common.css">
+    <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" href="#/"><img src="img/logo_system.png" alt="Stikprøve"></a>
+
+                <div class="nav-collapse collapse">
+                    <ul class="nav">
+                        <li ng-class="active"><a href="#/">Front</a></li>
+                        <li class=""><a href="#/home/login">Login</a></li>
+                        <li class=""><a href="#/manage">Manage</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" ng-view=""></div>
+</div>
+<!-- vendor -->
+<script src="js/vendor/jquery-1.9.0.min.js"></script>
+<script src="js/vendor/angular.min.js"></script>
+<script src="js/vendor/angular-resource.min.js"></script>
+
+<!-- client -->
+<script src="js/client.js"></script>
+</body>
+</html>
