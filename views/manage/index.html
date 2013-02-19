@@ -1,27 +1,61 @@
 <div class="tabbable">
     <ul class="nav nav-tabs">
-        <li id="tab1"><a href="#/manage/consumption" data-toggle="tab">Forbrug</a></li>
-        <li id="tab2"><a href="#/manage/change-password" data-toggle="tab">Skift kodeord</a></li>
-        <li id="tab3"><a href="#/manage/energy-10" data-toggle="tab">Energy 10</a></li>
-        <li id="tab4"><a href="#/manage/settings" data-toggle="tab">Indstillinger</a></li>
-        <li id="tab5"><a href="#/manage/new-user" data-toggle="tab">Opret ny Bruger</a></li>
-        <li id="tab6"><a href="#/manage/users" data-toggle="tab">Brugere</a></li>
-        <li id="tab7"><a href="#/manage/new-company" data-toggle="tab">Opret ny virksomhed</a></li>
+        <li id="tab1" ng-class="{active:activePage=='usage'}"><a href="#/manage/usage" data-toggle="tab">Forbrug</a>
+        </li>
+        <li id="tab2" ng-class="{active:activePage=='change-password'}"><a href="#/manage/change-password"
+                                                                           data-toggle="tab">Skift kodeord</a></li>
+        <li id="tab3" ng-class="{active:activePage=='energy-10'}"><a href="#/manage/energy-10" data-toggle="tab">Energy
+            10</a></li>
+        <li id="tab4" ng-class="{active:activePage=='settings'}"><a href="#/manage/settings" data-toggle="tab">Indstillinger</a>
+        </li>
+        <li id="tab5" ng-class="{active:activePage=='new-user'}"><a href="#/manage/new-user" data-toggle="tab">Opret ny
+            Bruger</a></li>
+        <li id="tab6" ng-class="{active:activePage=='users'}"><a href="#/manage/users" data-toggle="tab">Brugere</a>
+        </li>
+        <li id="tab7" ng-class="{active:activePage=='new-company'}"><a href="#/manage/new-company" data-toggle="tab">Opret
+            ny virksomhed</a></li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane active" id="tab6-content">
+        <div id="tab7-content" class="tab-pane" ng-class="{active:activePage=='new-company'}">
             <form>
-                <input type="text" name="mypage_newcompany_name" placeholder="Firmanavn...">
-                <input type="text" name="mypage_newcompany_cvr" placeholder="CVR nr...">
-                <input type="text" name="mypage_newcompany_address" placeholder="Adresse...">
-                <input type="text" name="mypage_newcompany_zip" placeholder="Postnr...">
-                <input type="text" name="mypage_newcompany_city" placeholder="By...">
-                <input type="text" name="mypage_newcompany_email" placeholder="Email, hvortil faktura fremsendes (revisor/bogholder)...">
-                <input type="text" name="mypage_newcompany_phone" placeholder="Telefon...">
+                <input type="text" name="newcompany_name" placeholder="Firmanavn..." ng-model="company.Name">
+                <input type="text" name="newcompany_cvr" placeholder="CVR nr..." ng-model="company.Cvr">
+                <input type="text" name="newcompany_address" placeholder="Adresse..." ng-model="company.Address">
+                <input type="text" name="newcompany_zip" placeholder="Postnr..." ng-model="company.Zip">
+                <input type="text" name="newcompany_city" placeholder="By..." ng-model="company.City">
+                <input type="text" name="newcompany_email" placeholder="Email, hvortil faktura fremsendes (revisor/bogholder)..." ng-model="company.Email">
+                <input type="text" name="newcompany_phone" placeholder="Telefon..." ng-model="company.Phone">
 
-                <input type="submit" class="btn btn-success btn-medium" id="frontpage_logonbtn"
-                       value="Opret ny virksomhed »">
+                <input type="submit" class="btn btn-success" value="Opret ny virksomhed »" ng-click="addCompany()">
             </form>
+        </div>
+
+        <div id="tab6-content" class="tab-pane" ng-class="{active:activePage=='users'}">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Fornavn</th>
+                    <th>Efternavn</th>
+                    <th>Email</th>
+                    <th>Telefon</th>
+                    <th>Status</th>
+                    <th>Slet</th>
+                    <th>Redigér</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="user in users">
+                    <td>{{user.FirstName}}</td>
+                    <td>{{user.LastName}}</td>
+                    <td>{{user.Email}}</td>
+                    <td>{{user.Phone}}</td>
+                    <td>{{user.UserRole.Name}}</td>
+                    <td><i class="icon-trash"></i></td>
+                    <td><i class="icon-pencil"></i></td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+

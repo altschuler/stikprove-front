@@ -11,9 +11,9 @@ Site.config ($routeProvider, $locationProvider) ->
       controller:'LoginCtrl'
 
     .when '/manage', # default to consumption tab
-      redirectTo:'manage/consumption'
+      redirectTo:'manage/usage'
 
-    .when '/manage/:tab',
+    .when '/manage/:page',
       templateUrl:'views/manage/index.html',
       controller:'ManageCtrl'
 

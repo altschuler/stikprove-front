@@ -12,8 +12,8 @@
       templateUrl: 'views/home/login.html',
       controller: 'LoginCtrl'
     }).when('/manage', {
-      redirectTo: 'manage/consumption'
-    }).when('/manage/:tab', {
+      redirectTo: 'manage/usage'
+    }).when('/manage/:page', {
       templateUrl: 'views/manage/index.html',
       controller: 'ManageCtrl'
     }).when('/not-found', {
@@ -31,38 +31,22 @@
     };
   });
 
-  Site.controller('ManageCtrl', function($scope, $routeParams) {
-    return $scope.activePage = $routeParams.page || "consumption";
+  Site.controller('ManageCtrl', function($scope, $routeParams, Api) {
+    $scope.company = new Api.company();
+    $scope.addCompany = function() {
+      return $scope.company.$save();
+    };
+    $scope.users = Api.user.query();
+    $scope.companies = Api.company.query();
+    $scope.activePage = $routeParams.page;
+    return $scope.$on('$routeChangeSuccess', function(scope, next, current) {
+      return $scope.activePage = next.params.page;
+    });
   });
 
   Site.controller('LoginCtrl', function($scope, Api) {
-    $scope.data = {
-      msg: 'Go login'
-    };
     return $scope.login = function() {
       return Api.auth.login($scope.data.userName, $scope.data.password);
-    };
-  });
-
-  Site.value('BaseURL', 'http://localhost:55471\:55471');
-
-  Site.factory('Api', function($http, $resource, Auth, BaseURL) {
-    var Translation, User, rootURL;
-    rootURL = 'http://localhost:55471\:55471';
-    Translation = $resource(rootURL + '/api/translation/:id');
-    User = $resource(rootURL + '/api/user/:id');
-    return {
-      translation: Translation,
-      user: User,
-      auth: Auth
-    };
-  });
-
-  Site.factory('Auth', function(BaseURL) {
-    return {
-      login: function(userName, password) {
-        return console.log(BaseURL, userName, password);
-      }
     };
   });
 
@@ -78,5 +62,24 @@
       console[method] = function() {};
     }
   }
+
+  Site.value('BaseURL', 'http://localhost:55471\:55471');
+
+  Site.factory('Api', function($http, $resource, Auth, BaseURL) {
+    return {
+      translation: $resource(BaseURL + '/api/translation/:id'),
+      user: $resource(BaseURL + '/api/user/:id'),
+      company: $resource(BaseURL + '/api/company/:id'),
+      auth: Auth
+    };
+  });
+
+  Site.factory('Auth', function(BaseURL) {
+    return {
+      login: function(userName, password) {
+        return console.log(BaseURL, userName, password);
+      }
+    };
+  });
 
 }).call(this);
