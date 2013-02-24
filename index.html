@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/angular-ui.min.css">
     <script src="js/vendor/modernizr-2.6.2.min.js"></script>
 </head>
 <body>
@@ -33,8 +34,8 @@
                 <div class="nav-collapse collapse">
                     <ul class="nav">
                         <li ng-class="active"><a href="#/">Front</a></li>
-                        <li class=""><a href="#/home/login">Login</a></li>
-                        <li class=""><a href="#/manage">Manage</a></li>
+                        <li ng-class="active"><a href="#/login">Login</a></li>
+                        <li ng-class="active" class=""><a href="#/manage">Manage</a></li>
                     </ul>
                 </div>
             </div>
@@ -45,8 +46,11 @@
 </div>
 <!-- vendor -->
 <script src="js/vendor/jquery-1.9.0.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.js"></script>
+<script src="js/vendor/angular.min.js"></script>
 <script src="js/vendor/angular-resource.min.js"></script>
+<script src="js/vendor/angular-ui.min.js"></script>
+<script src="js/vendor/angular-ui-ieshiv.min.js"></script>
+<script src="js/vendor/base64.js"></script>
 
 <!-- client -->
 <script src="js/client.js"></script>

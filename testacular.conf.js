@@ -3,8 +3,9 @@ basePath = './';
 
 // list of files / patterns to load in the browser
 files = [
-  JASMINE,
+  'test/vendor/jasmine-1.3.1/jasmine.js',
   JASMINE_ADAPTER,
+  'js/vendor/jquery-1.9.0.min.js',
   'js/vendor/angular.min.js',
   'js/vendor/angular-resource.min.js',
   'test/vendor/angular-mocks.js',

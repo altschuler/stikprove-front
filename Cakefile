@@ -10,7 +10,7 @@ fs            = require 'fs'
 config =
   srcDir:  'coffee'
   outDir:  'js'
-  inFiles: [ 'config', 'controllers', 'directives', 'services', 'plugins' ]
+  inFiles: [ 'config', 'base64', 'controllers', 'directives', 'services', 'plugins' ]
   outFile: 'client'
   yuic:    '~/Dropbox/toolbox/dotfiles/bin/yuicompressor-2.4.2.jar'
 

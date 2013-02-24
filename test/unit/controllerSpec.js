@@ -5,17 +5,7 @@
     var $browser, $scope, ctrl;
     $scope = null;
     $browser = null;
-    ctrl = null;
-    beforeEach(module('Site'));
-    beforeEach(inject(function($rootScope, $controller) {
-      $scope = $rootScope.$new();
-      return ctrl = $controller('ManageCtrl', {
-        $scope: $scope
-      });
-    }));
-    return it('should default to usage tab', function() {
-      return expect($scope.activePage).toBe('usage');
-    });
+    return ctrl = null;
   });
 
 }).call(this);

@@ -4,11 +4,11 @@
 
   Site = angular.module('Site', ['ngResource']);
 
-  Site.config(function($routeProvider, $locationProvider) {
-    return $routeProvider.when('/', {
-      templateUrl: 'views/home/front.html',
+  Site.config(function($routeProvider, $locationProvider, $httpProvider) {
+    $routeProvider.when('/', {
+      templateUrl: 'views/home/index.html',
       controller: 'FrontCtrl'
-    }).when('/home/login', {
+    }).when('/login', {
       templateUrl: 'views/home/login.html',
       controller: 'LoginCtrl'
     }).when('/manage', {
@@ -16,11 +16,110 @@
     }).when('/manage/:page', {
       templateUrl: 'views/manage/index.html',
       controller: 'ManageCtrl'
+    }).when('/spot/new', {
+      templateUrl: 'views/spot/new.html',
+      controller: 'SpotNewCtrl'
     }).when('/not-found', {
       templateUrl: 'views/errors/not-found.html'
     }).otherwise({
       redirectTo: '/not-found'
     });
+    return $httpProvider.responseInterceptors.push('authHttpInterceptor');
+  });
+
+  Site.factory('Base64', function() {
+    return {
+      _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+      encode: function(input) {
+        var chr1, chr2, chr3, enc1, enc2, enc3, enc4, i, output, _results;
+        output = "";
+        i = 0;
+        input = Base64._utf8_encode(input);
+        _results = [];
+        while (i < input.length) {
+          chr1 = input.charCodeAt(i++);
+          chr2 = input.charCodeAt(i++);
+          chr3 = input.charCodeAt(i++);
+          enc1 = chr1 >> 2;
+          enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+          enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+          enc4 = chr3 & 63;
+          if (isNaN(chr2)) {
+            enc3 = enc4 = 64;
+          } else if (isNaN(chr3)) {
+            enc4 = 64;
+          }
+          _results.push(output = output + this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) + this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4));
+        }
+        return _results;
+      },
+      decode: function(input) {
+        var chr1, chr2, chr3, enc1, enc2, enc3, enc4, i, output, _results;
+        output = "";
+        i = 0;
+        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+        _results = [];
+        while (i < input.length) {
+          enc1 = this._keyStr.indexOf(input.charAt(i++));
+          enc2 = this._keyStr.indexOf(input.charAt(i++));
+          enc3 = this._keyStr.indexOf(input.charAt(i++));
+          enc4 = this._keyStr.indexOf(input.charAt(i++));
+          chr1 = (enc1 << 2) | (enc2 >> 4);
+          chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+          chr3 = ((enc3 & 3) << 6) | enc4;
+          output = output + String.fromCharCode(chr1);
+          if (enc3 !== 64) {
+            output = output + String.fromCharCode(chr2);
+          }
+          if (enc4 !== 64) {
+            output = output + String.fromCharCode(chr3);
+          }
+          _results.push(output = Base64._utf8_decode(output));
+        }
+        return _results;
+      },
+      _utf8_encode: function(string) {
+        var c, n, utftext, _i, _ref;
+        string = string.replace(/\r\n/g, "\n");
+        utftext = "";
+        for (n = _i = 0, _ref = string.length; 0 <= _ref ? _i <= _ref : _i >= _ref; n = 0 <= _ref ? ++_i : --_i) {
+          c = string.charCodeAt(n);
+        }
+        if (c < 128) {
+          return utftext += String.fromCharCode(c);
+        } else if (c > 127 && c < 2048) {
+          utftext += String.fromCharCode((c >> 6) | 192);
+          return utftext += String.fromCharCode((c & 63) | 128);
+        } else {
+          utftext += String.fromCharCode((c >> 12) | 224);
+          utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+          return utftext += String.fromCharCode((c & 63) | 128);
+        }
+      },
+      _utf8_decode: function(utftext) {
+        var c, c1, c2, c3, i, string;
+        string = "";
+        i = 0;
+        c = c1 = c2 = 0;
+        while (i < utftext.length) {
+          c = utftext.charCodeAt(i);
+          if (c < 128) {
+            string += String.fromCharCode(c);
+            i++;
+          } else if ((c > 191) && (c < 224)) {
+            c2 = utftext.charCodeAt(i + 1);
+            string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+            i += 2;
+          } else {
+            c2 = utftext.charCodeAt(i + 1);
+            c3 = utftext.charCodeAt(i + 2);
+            string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+            i += 3;
+          }
+        }
+        return string;
+      }
+    };
   });
 
   Site.controller('FrontCtrl', function($scope, Api) {
@@ -33,20 +132,191 @@
 
   Site.controller('ManageCtrl', function($scope, $routeParams, Api) {
     $scope.company = new Api.company();
+    $scope.user = new Api.user();
     $scope.addCompany = function() {
       return $scope.company.$save();
     };
+    $scope.addUser = function() {
+      return $scope.user.$save();
+    };
+    $scope.removeUser = function(user) {
+      return Api.user.remove({
+        id: user.Id
+      }, function() {
+        return $scope.apply(function() {
+          return $scope.users = Api.user.query();
+        });
+      });
+    };
     $scope.users = Api.user.query();
     $scope.companies = Api.company.query();
+    $scope.userRoles = Api.userRole.query();
     $scope.activePage = $routeParams.page;
     return $scope.$on('$routeChangeSuccess', function(scope, next, current) {
       return $scope.activePage = next.params.page;
     });
   });
 
-  Site.controller('LoginCtrl', function($scope, Api) {
+  Site.controller('LoginCtrl', function($scope, $http, Session) {
     return $scope.login = function() {
-      return Api.auth.login($scope.data.userName, $scope.data.password);
+      var error, success, token;
+      token = Base64.encode("" + $scope.data.userName + ":" + $scope.data.password);
+      $http.defaults.headers.common['Authorization'] = "Basic " + token;
+      success = function(response) {
+        if (response.status === 200) {
+          Session.login(response.data);
+          return console.log(Session.user);
+        }
+      };
+      error = function(response) {
+        delete $http.defaults.headers.common['Authorization'];
+        return alert('How about no!');
+      };
+      return $http.get("/api/ping/any").then(success, error);
+    };
+  });
+
+  Site.directive('vldt', function() {
+    return {
+      restrict: 'A',
+      link: function(scope, element, attrs) {
+        var DIGIT_REGEX, EMAIL_REGEX, handleErrors, messageForRule, messages, p, rawRule, rulePart, rules;
+        EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@\”]+(\.[^<>()[\]\\.,;:\s@\”]+)*)|(\”.+\”))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        DIGIT_REGEX = /^\d+$/;
+        rules = (function() {
+          var _i, _j, _len, _len1, _ref, _ref1, _results;
+          _ref = attrs.vldt.split(',');
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            rawRule = _ref[_i];
+            p = {
+              type: null,
+              param: null,
+              message: null
+            };
+            _ref1 = rawRule.split(/(?=[:|!])/);
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              rulePart = _ref1[_j];
+              $.trim(rulePart);
+              switch (rulePart.charAt(0)) {
+                case "!":
+                  p.message = $.trim(rulePart.substring(1));
+                  break;
+                case ":":
+                  p.param = $.trim(rulePart.substring(1));
+                  break;
+                default:
+                  p.type = $.trim(rulePart);
+              }
+            }
+            _results.push(p);
+          }
+          return _results;
+        })();
+        messages = {
+          req: 'Feltet skal udfyldes',
+          mail: 'Ikke en gyldig email',
+          length: 'Mindst :param: karaktere',
+          match: 'Er ikke ens',
+          digit: 'Må kun indeholde tal'
+        };
+        messageForRule = function(rule) {
+          var _ref;
+          return ((_ref = rule.message) != null ? _ref : rule.message = messages[rule.type]).replace(':param:', rule.param);
+        };
+        handleErrors = function(rules) {
+          if (rules.length === 0) {
+            return element.removeClass('vldt-error');
+          } else {
+            return element.addClass('vldt-error');
+          }
+        };
+        return $(element).on('change', function() {
+          var failedRules, rule, val, _i, _len;
+          failedRules = [];
+          val = $(this).val();
+          for (_i = 0, _len = rules.length; _i < _len; _i++) {
+            rule = rules[_i];
+            switch (rule.type) {
+              case 'req':
+                if (val.length === 0) {
+                  failedRules.push(rule);
+                }
+                break;
+              case 'mail':
+                if (!EMAIL_REGEX.test(val)) {
+                  failedRules.push(rule);
+                }
+                break;
+              case 'length':
+                if (val.length < parseInt(rule.param, 10)) {
+                  failedRules.push(rule);
+                }
+                break;
+              case 'match':
+                if (val !== $(rule.param).val()) {
+                  failedRules.push(rule);
+                }
+                break;
+              case 'digit':
+                if (!DIGIT_REGEX.test(val)) {
+                  failedRules.push(rule);
+                }
+                break;
+              default:
+                throw new Error("Unknown rule type '" + rule.type + "'");
+            }
+          }
+          return handleErrors(failedRules);
+        });
+      }
+    };
+  });
+
+  Site.value('BaseURL', 'http://localhost\\:55471');
+
+  Site.factory('Api', function($http, $resource, BaseURL) {
+    return {
+      translation: $resource(BaseURL + '/api/translation/:id'),
+      user: $resource(BaseURL + '/api/user/:id'),
+      company: $resource(BaseURL + '/api/company/:id'),
+      userRole: $resource(BaseURL + '/api/userrole/:id')
+    };
+  });
+
+  Site.service('Session', function() {
+    this.user = null;
+    return {
+      login: function(user) {
+        this.user = user;
+        return this.user.FullName = "" + user.FirstName + " " + user.LastName;
+      },
+      logout: function() {
+        return this.user = null;
+      },
+      isAuthenticated: function() {
+        return this.user !== null;
+      }
+    };
+  });
+
+  Site.factory('authHttpInterceptor', function($q, $location, Session) {
+    var error, success;
+    success = function(response) {
+      console.log(Session);
+      if (!Session.user) {
+        $location.path('/login');
+      }
+      return response;
+    };
+    error = function(response) {
+      if (response.status === 401) {
+        $location.path('/login');
+      }
+      return $q.reject(response);
+    };
+    return function(promise) {
+      return promise.then(success, error);
     };
   });
 
@@ -62,24 +332,5 @@
       console[method] = function() {};
     }
   }
-
-  Site.value('BaseURL', 'http://localhost:55471\:55471');
-
-  Site.factory('Api', function($http, $resource, Auth, BaseURL) {
-    return {
-      translation: $resource(BaseURL + '/api/translation/:id'),
-      user: $resource(BaseURL + '/api/user/:id'),
-      company: $resource(BaseURL + '/api/company/:id'),
-      auth: Auth
-    };
-  });
-
-  Site.factory('Auth', function(BaseURL) {
-    return {
-      login: function(userName, password) {
-        return console.log(BaseURL, userName, password);
-      }
-    };
-  });
 
 }).call(this);

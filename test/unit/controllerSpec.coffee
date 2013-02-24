@@ -3,12 +3,12 @@ describe 'manage controller', () ->
   $browser = null
   ctrl = null
 
-  beforeEach module 'Site'
+  #beforeEach module 'Site'
 
-  beforeEach inject ($rootScope, $controller) ->
-    $scope = $rootScope.$new()
-    ctrl = $controller 'ManageCtrl',
-      $scope: $scope
+  #beforeEach inject ($rootScope, $controller) ->
+    #$scope = $rootScope.$new()
+    #ctrl = $controller 'ManageCtrl',
+    #  $scope: $scope
 
-  it 'should default to usage tab', () ->
-    expect($scope.activePage).toBe 'usage'
+  #it 'should default to usage tab', () ->
+    #expect($scope.activePage).toBe 'usage'

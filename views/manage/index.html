@@ -16,21 +16,40 @@
             ny virksomhed</a></li>
     </ul>
     <div class="tab-content">
-        <div id="tab7-content" class="tab-pane" ng-class="{active:activePage=='new-company'}">
+        <div class="tab-pane" ng-class="{active:activePage=='new-company'}">
             <form>
-                <input type="text" name="newcompany_name" placeholder="Firmanavn..." ng-model="company.Name">
-                <input type="text" name="newcompany_cvr" placeholder="CVR nr..." ng-model="company.Cvr">
-                <input type="text" name="newcompany_address" placeholder="Adresse..." ng-model="company.Address">
-                <input type="text" name="newcompany_zip" placeholder="Postnr..." ng-model="company.Zip">
-                <input type="text" name="newcompany_city" placeholder="By..." ng-model="company.City">
-                <input type="text" name="newcompany_email" placeholder="Email, hvortil faktura fremsendes (revisor/bogholder)..." ng-model="company.Email">
-                <input type="text" name="newcompany_phone" placeholder="Telefon..." ng-model="company.Phone">
+                <input type="text" placeholder="Firmanavn..." ng-model="company.Name">
+                <input type="text" placeholder="CVR nr..." ng-model="company.Cvr">
+                <input type="text" placeholder="Adresse..." ng-model="company.Address">
+                <input type="text" placeholder="Postnr..." ng-model="company.Zip">
+                <input type="text" placeholder="By..." ng-model="company.City">
+                <input type="text" placeholder="Email, hvortil faktura fremsendes (revisor/bogholder)..." ng-model="company.Email">
+                <input type="text" placeholder="Telefon..." ng-model="company.Phone">
 
                 <input type="submit" class="btn btn-success" value="Opret ny virksomhed »" ng-click="addCompany()">
             </form>
         </div>
+        <div class="tab-pane" ng-class="{active:activePage=='new-user'}">
+            <form>
+                <input type="text" placeholder="Fornavn..." ng-model="user.FirstName" vldt="req!SKRIV NOGET MAND">
+                <input type="text" placeholder="Efternavn..." ng-model="user.LastName" vldt="req">
+                <input type="text" placeholder="Email..." ng-model="user.Email" vldt="mail">
+                <input type="text" placeholder="Telefon..." ng-model="user.Phone" vldt="req, digit">
+                <input type="text" placeholder="Adgangskode..." class="password-original" ng-model="user.Password" vldt="req, length:6">
+                <input type="text" placeholder="Gentag adgangskode..." vldt="req, match:.password-original">
 
-        <div id="tab6-content" class="tab-pane" ng-class="{active:activePage=='users'}">
+                <select name="new_user_company" ng-options="company.Id as company.Name for company in companies" ng-model="user.CompanyId" vldt="req">
+                    <option value="">- Company -</option>
+                </select>
+
+                <select name="new_user_role" ng-options="role.Id as role.Name for role in userRoles" ng-model="user.UserRoleId" vldt="req">
+                    <option value="">- Role -</option>
+                </select>
+                
+                <input type="submit" class="btn btn-success" value="Opret ny bruger »" ng-click="addUser()">
+            </form>
+        </div>
+        <div class="tab-pane" ng-class="{active:activePage=='users'}">
             <table class="table table-striped">
                 <thead>
                 <tr>
@@ -50,7 +69,7 @@
                     <td>{{user.Email}}</td>
                     <td>{{user.Phone}}</td>
                     <td>{{user.UserRole.Name}}</td>
-                    <td><i class="icon-trash"></i></td>
+                    <td><i class="icon-trash" ng-click="removeUser(user)"></i></td>
                     <td><i class="icon-pencil"></i></td>
                 </tr>
                 </tbody>
