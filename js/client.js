@@ -2,29 +2,60 @@
 (function() {
   var Site, console, length, method, methods;
 
-  Site = angular.module('Site', ['ngResource']);
+  Site = angular.module('Site', ['ngResource', 'ngCookies']);
 
   Site.config(function($routeProvider, $locationProvider, $httpProvider) {
-    $routeProvider.when('/', {
+    return $routeProvider.when('/', {
       templateUrl: 'views/home/index.html',
-      controller: 'FrontCtrl'
+      controller: 'HomeIndexCtrl',
+      auth: 0
     }).when('/login', {
       templateUrl: 'views/home/login.html',
-      controller: 'LoginCtrl'
+      controller: 'HomeLoginCtrl',
+      auth: 0
     }).when('/manage', {
       redirectTo: 'manage/usage'
     }).when('/manage/:page', {
       templateUrl: 'views/manage/index.html',
-      controller: 'ManageCtrl'
-    }).when('/spot/new', {
-      templateUrl: 'views/spot/new.html',
-      controller: 'SpotNewCtrl'
+      controller: 'ManageIndexCtrl',
+      auth: 1
     }).when('/not-found', {
-      templateUrl: 'views/errors/not-found.html'
+      templateUrl: 'views/errors/not-found.html',
+      auth: 0
     }).otherwise({
       redirectTo: '/not-found'
     });
-    return $httpProvider.responseInterceptors.push('authHttpInterceptor');
+  });
+
+  Site.run(function($rootScope, $location, $route, Session) {
+    var error, startListening, success, validateRoute;
+    startListening = function() {
+      return $rootScope.$on('$routeChangeStart', function(event, current, previous) {
+        if (!(current.redirectTo != null)) {
+          return validateRoute(current.$route);
+        }
+      });
+    };
+    error = success = function() {
+      validateRoute($route);
+      return startListening();
+    };
+    Session.tryCookie().then(success, error);
+    return validateRoute = function(route) {
+      var authorized, clearance;
+      authorized = false;
+      clearance = route.auth;
+      if (clearance === 0) {
+        authorized = true;
+      } else if ((clearance != null) && (Session.user != null)) {
+        authorized = Session.user.Role.Id <= clearance;
+      } else {
+        authorized = Session.user != null;
+      }
+      if (!authorized) {
+        return $location.path('/login');
+      }
+    };
   });
 
   Site.factory('Base64', function() {
@@ -122,15 +153,7 @@
     };
   });
 
-  Site.controller('FrontCtrl', function($scope, Api) {
-    return $scope.translateFromId = function(id) {
-      return $scope.data.translated = Api.translation.get({
-        id: id
-      });
-    };
-  });
-
-  Site.controller('ManageCtrl', function($scope, $routeParams, Api) {
+  Site.controller('ManageIndexCtrl', function($scope, $routeParams, Api) {
     $scope.company = new Api.company();
     $scope.user = new Api.user();
     $scope.addCompany = function() {
@@ -157,22 +180,44 @@
     });
   });
 
-  Site.controller('LoginCtrl', function($scope, $http, Session) {
+  Site.controller('NavCtrl', function($scope, Session, $location) {
+    var updateScope;
+    updateScope = function() {
+      return $scope.data = {
+        isAuthenticated: Session.isAuthenticated(),
+        displayName: Session.isAuthenticated() ? Session.user.FirstName : void 0
+      };
+    };
+    updateScope();
+    $scope.$on('session:changed', updateScope);
+    return $scope.logout = function() {
+      Session.logout();
+      return $location.path('/');
+    };
+  });
+
+  Site.controller('HomeIndexCtrl', function($scope, Api) {
+    return $scope.translateFromId = function(id) {
+      return $scope.data.translated = Api.translation.get({
+        id: id
+      });
+    };
+  });
+
+  Site.controller('HomeLoginCtrl', function($scope, $http, $location, Session, Api) {
     return $scope.login = function() {
       var error, success, token;
-      token = Base64.encode("" + $scope.data.userName + ":" + $scope.data.password);
-      $http.defaults.headers.common['Authorization'] = "Basic " + token;
+      token = Session.generateToken($scope.data.userName, $scope.data.password);
       success = function(response) {
         if (response.status === 200) {
-          Session.login(response.data);
-          return console.log(Session.user);
+          Session.login(response.data, token);
+          return $location.path('/');
         }
       };
       error = function(response) {
-        delete $http.defaults.headers.common['Authorization'];
         return alert('How about no!');
       };
-      return $http.get("/api/ping/any").then(success, error);
+      return Api.auth.validateToken(token).then(success, error);
     };
   });
 
@@ -273,6 +318,39 @@
     };
   });
 
+  Site.directive('roleNav', function(Session) {
+    return {
+      restrict: 'A',
+      link: function(scope, element, attrs) {
+        var clearance, updateVisibility;
+        clearance = parseInt(attrs.roleNav);
+        updateVisibility = function() {
+          var user;
+          user = Session.user;
+          if (clearance === 0) {
+            return element.show();
+          } else if (user != null) {
+            if (clearance === -1) {
+              return element.hide();
+            } else if (user.Role.Id <= clearance) {
+              return element.show();
+            } else {
+              return element.hide();
+            }
+          } else if (clearance === -1) {
+            return element.show();
+          } else {
+            return element.hide();
+          }
+        };
+        scope.$on('session:changed', function() {
+          return updateVisibility();
+        });
+        return updateVisibility();
+      }
+    };
+  });
+
   Site.value('BaseURL', 'http://localhost\\:55471');
 
   Site.factory('Api', function($http, $resource, BaseURL) {
@@ -280,43 +358,68 @@
       translation: $resource(BaseURL + '/api/translation/:id'),
       user: $resource(BaseURL + '/api/user/:id'),
       company: $resource(BaseURL + '/api/company/:id'),
-      userRole: $resource(BaseURL + '/api/userrole/:id')
+      userRole: $resource(BaseURL + '/api/userrole/:id'),
+      auth: {
+        validateToken: function(token) {
+          return $http.get("/api/ping/any", {
+            headers: {
+              'Authorization': "Basic " + token
+            }
+          });
+        }
+      }
     };
   });
 
-  Site.service('Session', function() {
+  Site.service('Session', function($cookieStore, $http, $rootScope, $q, Api) {
     this.user = null;
+    this.token = null;
     return {
-      login: function(user) {
+      generateToken: function(login, password) {
+        return Base64.encode("" + login + ":" + password);
+      },
+      login: function(user, token) {
         this.user = user;
-        return this.user.FullName = "" + user.FirstName + " " + user.LastName;
+        this.token = token;
+        $cookieStore.put('session', {
+          user: this.user,
+          token: this.token
+        });
+        $http.defaults.headers.common['Authorization'] = "Basic " + this.token;
+        return $rootScope.$broadcast('session:changed');
       },
       logout: function() {
-        return this.user = null;
+        this.user = null;
+        this.token = null;
+        $cookieStore.remove('session');
+        delete $http.defaults.headers.common['Authorization'];
+        return $rootScope.$broadcast('session:changed');
       },
       isAuthenticated: function() {
-        return this.user !== null;
+        return (this.user != null) && (this.token != null);
+      },
+      tryCookie: function() {
+        var deferred, error, session, success,
+          _this = this;
+        deferred = $q.defer();
+        session = $cookieStore.get('session');
+        if (session) {
+          success = function() {
+            _this.login(session.user, session.token);
+            return deferred.resolve();
+          };
+          error = function() {
+            return deferred.reject();
+          };
+          this.validateSession(session).then(success, error);
+        } else {
+          deferred.reject();
+        }
+        return deferred.promise;
+      },
+      validateSession: function(session) {
+        return Api.auth.validateToken(session.token);
       }
-    };
-  });
-
-  Site.factory('authHttpInterceptor', function($q, $location, Session) {
-    var error, success;
-    success = function(response) {
-      console.log(Session);
-      if (!Session.user) {
-        $location.path('/login');
-      }
-      return response;
-    };
-    error = function(response) {
-      if (response.status === 401) {
-        $location.path('/login');
-      }
-      return $q.reject(response);
-    };
-    return function(promise) {
-      return promise.then(success, error);
     };
   });
 

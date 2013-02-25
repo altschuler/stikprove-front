@@ -26,16 +26,22 @@
 </head>
 <body>
 <div class="container">
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-inverse navbar-fixed-top" ng-controller="NavCtrl">
         <div class="navbar-inner">
             <div class="container">
                 <a class="brand" href="#/"><img src="img/logo_system.png" alt="Stikprøve"></a>
 
                 <div class="nav-collapse collapse">
                     <ul class="nav">
-                        <li ng-class="active"><a href="#/">Front</a></li>
-                        <li ng-class="active"><a href="#/login">Login</a></li>
-                        <li ng-class="active" class=""><a href="#/manage">Manage</a></li>
+                        <li ng-class="active" role-nav="0"><a href="#/">Front</a></li>
+                        <li ng-class="active" role-nav="-1"><a href="#/login">Login</a></li>
+                        <li ng-class="active" role-nav="2"><a href="#/manage">Manage</a></li>
+                        <li ng-class="active" role-nav="2"><a href="#/spot/create">Ny stikprøve</a></li>
+                        <li ng-class="active" role-nav="1"><a href="#/admin">Sudo stuff</a></li>
+                    </ul>
+
+                    <ul class="nav pull-right" ng-show="data.isAuthenticated">
+                        <li><a ng-click="logout()">Log ud ({{data.displayName}})</a></li>
                     </ul>
                 </div>
             </div>
@@ -47,6 +53,7 @@
 <!-- vendor -->
 <script src="js/vendor/jquery-1.9.0.min.js"></script>
 <script src="js/vendor/angular.min.js"></script>
+<script src="js/vendor/angular-cookies.min.js"></script>
 <script src="js/vendor/angular-resource.min.js"></script>
 <script src="js/vendor/angular-ui.min.js"></script>
 <script src="js/vendor/angular-ui-ieshiv.min.js"></script>

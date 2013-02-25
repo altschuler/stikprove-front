@@ -25,8 +25,8 @@ Site.directive 'vldt', ->
 
     handleErrors = (rules) ->
       if rules.length == 0 then element.removeClass 'vldt-error' else element.addClass 'vldt-error'
-      #for rule in rules
-      #  element.val(messageForRule rule)
+    #for rule in rules
+    #  element.val(messageForRule rule)
 
     $(element).on 'change', () ->
       failedRules = []

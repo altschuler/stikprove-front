@@ -38,11 +38,11 @@
                 <input type="text" placeholder="Adgangskode..." class="password-original" ng-model="user.Password" vldt="req, length:6">
                 <input type="text" placeholder="Gentag adgangskode..." vldt="req, match:.password-original">
 
-                <select name="new_user_company" ng-options="company.Id as company.Name for company in companies" ng-model="user.CompanyId" vldt="req">
+                <select name="new_user_company" ng-options="company.Id as company.Name for company in companies" ng-model="user.Company.Id" vldt="req">
                     <option value="">- Company -</option>
                 </select>
 
-                <select name="new_user_role" ng-options="role.Id as role.Name for role in userRoles" ng-model="user.UserRoleId" vldt="req">
+                <select name="new_user_role" ng-options="role.Id as role.Name for role in userRoles" ng-model="user.Role.Id" vldt="req">
                     <option value="">- Role -</option>
                 </select>
                 
@@ -68,7 +68,7 @@
                     <td>{{user.LastName}}</td>
                     <td>{{user.Email}}</td>
                     <td>{{user.Phone}}</td>
-                    <td>{{user.UserRole.Name}}</td>
+                    <td>{{user.Role.Name}}</td>
                     <td><i class="icon-trash" ng-click="removeUser(user)"></i></td>
                     <td><i class="icon-pencil"></i></td>
                 </tr>
