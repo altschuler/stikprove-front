@@ -1,3 +1,4 @@
+#TODO STOP WEBSTORM FILE WATCHERS!
 Site = angular.module('Site', ['ngResource', 'ngCookies'])
 
 # --- ROUTING --- #
@@ -19,7 +20,12 @@ Site.config ($routeProvider, $locationProvider, $httpProvider) ->
     .when '/manage/:page',
       templateUrl:'views/manage/index.html'
       controller:'ManageIndexCtrl'
-      auth:1
+      auth:0
+
+    .when '/case/create',
+      templateUrl:'views/case/create.html'
+      controller:'CaseCreateCtrl'
+      auth:0
 
     .when '/not-found',
       templateUrl:'views/errors/not-found.html'
@@ -54,7 +60,7 @@ Site.run ($rootScope, $location, $route, Session) ->
     if clearance is 0 # 0 means everybody has access
       authorized = yes
     else if clearance? and Session.user?
-      authorized = Session.user.Role.Id <= clearance
+      ## authorized = Session.user.Role.Id <= clearance
     else # no auth attribute means any authenticated user has access
       authorized = Session.user?
 

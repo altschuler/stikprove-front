@@ -3,11 +3,11 @@
 
   describe('form validation', function() {
     var VLDT_ERROR_CLS, compile, hasErr;
+    VLDT_ERROR_CLS = 'vldt-error';
     hasErr = function(elm) {
       return elm.hasClass(VLDT_ERROR_CLS);
     };
     compile = null;
-    VLDT_ERROR_CLS = 'vldt-error';
     beforeEach(module('Site'));
     beforeEach(inject(function($compile) {
       return compile = $compile;

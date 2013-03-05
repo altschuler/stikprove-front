@@ -11,16 +11,16 @@ fs            = require 'fs'
 config =
   srcDir:  'coffee'
   outDir:  'js'
-  inFiles: [ 'config', 'base64', 'controllers/manage', 'controllers/home', 'directives/vldt', 'directives/navigation', 'services', 'plugins' ]
+  inFiles: [ 'config', 'base64', 'controllers/manage', 'controllers/home', 'controllers/case', 'directives/vldt', 'directives/navigation', 'services', 'plugins' ]
   outFile: 'client'
-  yuic:    '~/Dropbox/toolbox/dotfiles/bin/yuicompressor-2.4.2.jar'
+  yuic:    'C:/Users/Simon/Development/Libraries/Java/yuicompressor-2.4.2.jar'
 
 outJS    = "#{config.outDir}/#{config.outFile}"
 strFiles = ("#{config.srcDir}/#{file}.coffee" for file in config.inFiles).join ' '
 
 # deal with errors from child processes
-exerr  = (err, sout,  serr)->
-  process.stdout.write err  if err
+exerr  = (err, sout, serr)->
+  process.stdout.write err if err
   process.stdout.write sout if sout
   process.stdout.write serr if serr
 
@@ -32,6 +32,9 @@ task 'watch', 'watch and compile changes in source dir', ->
 
 task 'build', 'join and compile *.coffee files', ->
   exec "coffee -j #{outJS}.js -c #{strFiles}", exerr
+
+#task 'build:vendor', 'join and compile *.js vendor files', ->
+#  exec "coffee -j vendor.js -c js/vendor/*.js", exerr
 
 task 'min', 'minify compiled *.js file', ->
   exec "java -jar #{config.yuic} #{outJS}.js -o #{outJS}.min.js", exerr

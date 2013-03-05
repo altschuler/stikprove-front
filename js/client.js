@@ -18,7 +18,11 @@
     }).when('/manage/:page', {
       templateUrl: 'views/manage/index.html',
       controller: 'ManageIndexCtrl',
-      auth: 1
+      auth: 0
+    }).when('/case/create', {
+      templateUrl: 'views/case/create.html',
+      controller: 'CaseCreateCtrl',
+      auth: 0
     }).when('/not-found', {
       templateUrl: 'views/errors/not-found.html',
       auth: 0
@@ -48,7 +52,7 @@
       if (clearance === 0) {
         authorized = true;
       } else if ((clearance != null) && (Session.user != null)) {
-        authorized = Session.user.Role.Id <= clearance;
+
       } else {
         authorized = Session.user != null;
       }
@@ -153,14 +157,33 @@
     };
   });
 
-  Site.controller('ManageIndexCtrl', function($scope, $routeParams, Api) {
+  Site.controller('ManageIndexCtrl', function($scope, $routeParams, $location, Api, Utils) {
     $scope.company = new Api.company();
     $scope.user = new Api.user();
+    $scope.user.Roles = [];
     $scope.addCompany = function() {
       return $scope.company.$save();
     };
     $scope.addUser = function() {
-      return $scope.user.$save();
+      var error, success;
+      success = function() {
+        return $location.path('/manage/users');
+      };
+      error = function(u, response) {
+        alert('something bad happenede');
+        return console.log(u, response);
+      };
+      return $scope.user.$save({}, success, error);
+    };
+    $scope.addRole = function(selectedRole) {
+      var _ref;
+      return _ref = Utils.moveElement({
+        Id: parseInt(selectedRole)
+      }, $scope.availableUserRoles, $scope.user.Roles), $scope.availableUserRoles = _ref[0], $scope.user.Roles = _ref[1], _ref;
+    };
+    $scope.removeRole = function(role) {
+      var _ref;
+      return _ref = Utils.moveElement(role, $scope.user.Roles, $scope.availableUserRoles), $scope.user.Roles = _ref[0], $scope.availableUserRoles = _ref[1], _ref;
     };
     $scope.removeUser = function(user) {
       return Api.user.remove({
@@ -173,7 +196,7 @@
     };
     $scope.users = Api.user.query();
     $scope.companies = Api.company.query();
-    $scope.userRoles = Api.userRole.query();
+    $scope.availableUserRoles = Api.userRole.query();
     $scope.activePage = $routeParams.page;
     return $scope.$on('$routeChangeSuccess', function(scope, next, current) {
       return $scope.activePage = next.params.page;
@@ -184,8 +207,8 @@
     var updateScope;
     updateScope = function() {
       return $scope.data = {
-        isAuthenticated: Session.isAuthenticated(),
-        displayName: Session.isAuthenticated() ? Session.user.FirstName : void 0
+        isLoggedIn: Session.isLoggedIn(),
+        displayName: Session.isLoggedIn() ? Session.user.FirstName : void 0
       };
     };
     updateScope();
@@ -206,18 +229,23 @@
 
   Site.controller('HomeLoginCtrl', function($scope, $http, $location, Session, Api) {
     return $scope.login = function() {
-      var error, success, token;
-      token = Session.generateToken($scope.data.userName, $scope.data.password);
+      var error, success;
       success = function(response) {
         if (response.status === 200) {
-          Session.login(response.data, token);
+          Session.login(response.data);
           return $location.path('/');
         }
       };
       error = function(response) {
-        return alert('How about no!');
+        return alert('Invalid login!');
       };
-      return Api.auth.validateToken(token).then(success, error);
+      return Api.auth.login($scope.data.userName, $scope.data.password).then(success, error);
+    };
+  });
+
+  Site.controller('CaseCreateCtrl', function($scope) {
+    return $scope.data = {
+      message: "gogo go go go"
     };
   });
 
@@ -322,22 +350,18 @@
     return {
       restrict: 'A',
       link: function(scope, element, attrs) {
-        var clearance, updateVisibility;
-        clearance = parseInt(attrs.roleNav);
+        var requiredRole, updateVisibility;
+        requiredRole = parseInt(attrs.roleNav);
         updateVisibility = function() {
-          var user;
-          user = Session.user;
-          if (clearance === 0) {
+          if (requiredRole === 0) {
             return element.show();
-          } else if (user != null) {
-            if (clearance === -1) {
-              return element.hide();
-            } else if (user.Role.Id <= clearance) {
-              return element.show();
-            } else {
-              return element.hide();
-            }
-          } else if (clearance === -1) {
+          } else if (Session.isLoggedIn() && requiredRole === -1) {
+            return element.hide();
+          } else if (Session.isLoggedIn() && _.any(Session.user.Roles, function(role) {
+            return role.Id === requiredRole;
+          })) {
+            return element.show();
+          } else if (!Session.isLoggedIn() && requiredRole === -1) {
             return element.show();
           } else {
             return element.hide();
@@ -353,17 +377,37 @@
 
   Site.value('BaseURL', 'http://localhost\\:55471');
 
-  Site.factory('Api', function($http, $resource, BaseURL) {
+  Site.factory('Utils', function() {
+    return {
+      moveElement: function(match, fromArr, toArr) {
+        var elms, newFrom, newTo;
+        elms = typeof match === 'object' ? _.where(fromArr, match) : [match];
+        newTo = _.union(toArr, elms);
+        newFrom = _.difference(fromArr, elms);
+        return [newFrom, newTo];
+      }
+    };
+  });
+
+  Site.service('Api', function($http, $resource, BaseURL) {
     return {
       translation: $resource(BaseURL + '/api/translation/:id'),
       user: $resource(BaseURL + '/api/user/:id'),
       company: $resource(BaseURL + '/api/company/:id'),
       userRole: $resource(BaseURL + '/api/userrole/:id'),
       auth: {
-        validateToken: function(token) {
-          return $http.get("/api/ping/any", {
+        login: function(name, password) {
+          return $http.post("/api/access/login", {
+            Name: name,
+            Password: password
+          });
+        },
+        ping: function(token) {
+          return $http({
+            method: 'POST',
+            url: "/api/ping",
             headers: {
-              'Authorization': "Basic " + token
+              Authorization: "token " + token
             }
           });
         }
@@ -373,52 +417,54 @@
 
   Site.service('Session', function($cookieStore, $http, $rootScope, $q, Api) {
     this.user = null;
-    this.token = null;
     return {
-      generateToken: function(login, password) {
-        return Base64.encode("" + login + ":" + password);
+      generateToken: function(id, token) {
+        return Base64.encode("" + id + ":" + token);
       },
-      login: function(user, token) {
+      login: function(user) {
+        var token;
         this.user = user;
-        this.token = token;
-        $cookieStore.put('session', {
-          user: this.user,
-          token: this.token
-        });
-        $http.defaults.headers.common['Authorization'] = "Basic " + this.token;
+        token = this.generateToken(user.Id, user.AccessToken);
+        $cookieStore.put('session-user', this.user);
+        $http.defaults.headers.common['Authorization'] = "token " + token;
         return $rootScope.$broadcast('session:changed');
       },
       logout: function() {
         this.user = null;
-        this.token = null;
-        $cookieStore.remove('session');
+        $cookieStore.remove('session-user');
         delete $http.defaults.headers.common['Authorization'];
         return $rootScope.$broadcast('session:changed');
       },
-      isAuthenticated: function() {
-        return (this.user != null) && (this.token != null);
+      isLoggedIn: function() {
+        return this.user != null;
       },
       tryCookie: function() {
-        var deferred, error, session, success,
+        var deferred, error, sessionUser, success,
           _this = this;
         deferred = $q.defer();
-        session = $cookieStore.get('session');
-        if (session) {
+        sessionUser = $cookieStore.get('session-user');
+        if (sessionUser) {
           success = function() {
-            _this.login(session.user, session.token);
+            _this.login(sessionUser);
             return deferred.resolve();
           };
           error = function() {
             return deferred.reject();
           };
-          this.validateSession(session).then(success, error);
+          this.validateSession(sessionUser).then(success, error);
         } else {
           deferred.reject();
         }
         return deferred.promise;
       },
-      validateSession: function(session) {
-        return Api.auth.validateToken(session.token);
+      validateSession: function(sessionUser) {
+        var deferred;
+        if (!(sessionUser != null)) {
+          deferred = $q.defer();
+          deferred.reject();
+          return deferred;
+        }
+        return Api.auth.ping(this.generateToken(sessionUser.Id, sessionUser.AccessToken));
       }
     };
   });

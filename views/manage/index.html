@@ -42,9 +42,17 @@
                     <option value="">- Company -</option>
                 </select>
 
-                <select name="new_user_role" ng-options="role.Id as role.Name for role in userRoles" ng-model="user.Role.Id" vldt="req">
+                <select ui-select2 name="new_user_role" ng-model="selectedRole" vldt="req">
                     <option value="">- Role -</option>
+                    <option ng-repeat="role in availableUserRoles" value="{{role.Id}}">
+                        {{role.Name}}
+                    </option>
                 </select>
+                <button ng-click="addRole(selectedRole)" class="btn">Add role</button>
+
+                <ul ng-repeat="role in user.Roles">
+                    <p ng-click="removeRole(role)">{{role.Name}}</p>
+                </ul>
                 
                 <input type="submit" class="btn btn-success" value="Opret ny bruger »" ng-click="addUser()">
             </form>

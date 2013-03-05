@@ -5,8 +5,8 @@
     var updateScope;
     updateScope = function() {
       return $scope.data = {
-        isAuthenticated: Session.isAuthenticated(),
-        displayName: Session.isAuthenticated() ? Session.user.FirstName : void 0
+        isLoggedIn: Session.isLoggedIn(),
+        displayName: Session.isLoggedIn() ? Session.user.FirstName : void 0
       };
     };
     updateScope();
@@ -27,18 +27,17 @@
 
   Site.controller('HomeLoginCtrl', function($scope, $http, $location, Session, Api) {
     return $scope.login = function() {
-      var error, success, token;
-      token = Session.generateToken($scope.data.userName, $scope.data.password);
+      var error, success;
       success = function(response) {
         if (response.status === 200) {
-          Session.login(response.data, token);
+          Session.login(response.data);
           return $location.path('/');
         }
       };
       error = function(response) {
-        return alert('How about no!');
+        return alert('Invalid login!');
       };
-      return Api.auth.validateToken(token).then(success, error);
+      return Api.auth.login($scope.data.userName, $scope.data.password).then(success, error);
     };
   });
 

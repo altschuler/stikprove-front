@@ -8,6 +8,12 @@ files = [
   'js/vendor/jquery-1.9.0.min.js',
   'js/vendor/angular.min.js',
   'js/vendor/angular-resource.min.js',
+  'js/vendor/angular-cookies.min.js',
+  'js/vendor/angular-ui.min.js',
+  'js/vendor/angular-ui-ieshiv.min.js',
+  'js/vendor/base64.js',
+  'js/vendor/underscore-min.js',
+
   'test/vendor/angular-mocks.js',
 
   'js/client.js',
@@ -32,7 +38,7 @@ colors = true;
 logLevel = LOG_INFO;
 
 autoWatch = true;
-browsers = ['Chrome'];
+browsers = ['Firefox'];
 captureTimeout = 5000; // borwser timeout
 // Continuous Integration mode
 // if true, it capture browsers, run tests and exit

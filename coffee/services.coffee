@@ -1,51 +1,71 @@
 Site.value 'BaseURL', 'http://localhost\\:55471'
 
-Site.factory 'Api', ($http, $resource, BaseURL) ->
+Site.factory 'Utils', ->
+  moveElement: (match, fromArr, toArr) ->
+    elms = if typeof match is 'object'
+      _.where fromArr, match
+    else
+      [match]
+
+    newTo = _.union toArr, elms
+    newFrom = _.difference fromArr, elms
+    [newFrom, newTo]
+
+Site.service 'Api', ($http, $resource, BaseURL) ->
   translation: $resource BaseURL + '/api/translation/:id'
   user: $resource BaseURL + '/api/user/:id'
   company: $resource BaseURL + '/api/company/:id'
   userRole: $resource BaseURL + '/api/userrole/:id'
   auth:
-    validateToken: (token) ->
-      $http.get("/api/ping/any", headers:{'Authorization':"Basic #{token}"})
+    login: (name, password) ->
+      $http.post("/api/access/login", {Name:name, Password:password})
+
+    ping: (token) ->
+      $http
+        method:'POST'
+        url:"/api/ping"
+        headers:
+          Authorization: "token #{token}"
 
 Site.service 'Session', ($cookieStore, $http, $rootScope, $q, Api) ->
   @user = null
-  @token = null
 
-  generateToken: (login, password) ->
-    Base64.encode "#{login}:#{password}"
+  generateToken: (id, token) ->
+    Base64.encode "#{id}:#{token}"
 
-  login: (user, token) ->
+  # set a user as the session owner
+  login: (user) ->
     @user = user
-    @token = token
-    $cookieStore.put 'session', (user:@user, token:@token)
-    $http.defaults.headers.common['Authorization'] = "Basic #{@token}"
+    token = @generateToken(user.Id, user.AccessToken)
+    $cookieStore.put 'session-user', @user
+    $http.defaults.headers.common['Authorization'] = "token #{token}"
     $rootScope.$broadcast 'session:changed'
 
   logout: ->
     @user = null
-    @token = null
-    $cookieStore.remove 'session'
+    $cookieStore.remove 'session-user'
     delete $http.defaults.headers.common['Authorization']
     $rootScope.$broadcast 'session:changed'
 
-  isAuthenticated: ->
-    @user? and @token?
+  isLoggedIn: -> @user?
 
   tryCookie: ->
     deferred = $q.defer()
-    session = $cookieStore.get 'session'
-    if session
+    sessionUser = $cookieStore.get 'session-user'
+    if sessionUser
       success = =>
-        @login session.user, session.token
+        @login sessionUser
         deferred.resolve()
       error = =>
         deferred.reject()
-      @validateSession(session).then success, error
+      @validateSession(sessionUser).then success, error
     else
       deferred.reject()
     deferred.promise
 
-  validateSession: (session) ->
-    Api.auth.validateToken session.token
+  validateSession: (sessionUser) ->
+    if not sessionUser?
+      deferred = $q.defer()
+      deferred.reject()
+      return deferred
+    Api.auth.ping @generateToken(sessionUser.Id, sessionUser.AccessToken)

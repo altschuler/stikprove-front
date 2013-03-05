@@ -3,17 +3,37 @@
 
   Site.value('BaseURL', 'http://localhost\\:55471');
 
-  Site.factory('Api', function($http, $resource, BaseURL) {
+  Site.factory('Utils', function() {
+    return {
+      moveElement: function(match, fromArr, toArr) {
+        var elms, newFrom, newTo;
+        elms = typeof match === 'object' ? _.where(fromArr, match) : [match];
+        newTo = _.union(toArr, elms);
+        newFrom = _.difference(fromArr, elms);
+        return [newFrom, newTo];
+      }
+    };
+  });
+
+  Site.service('Api', function($http, $resource, BaseURL) {
     return {
       translation: $resource(BaseURL + '/api/translation/:id'),
       user: $resource(BaseURL + '/api/user/:id'),
       company: $resource(BaseURL + '/api/company/:id'),
       userRole: $resource(BaseURL + '/api/userrole/:id'),
       auth: {
-        validateToken: function(token) {
-          return $http.get("/api/ping/any", {
+        login: function(name, password) {
+          return $http.post("/api/access/login", {
+            Name: name,
+            Password: password
+          });
+        },
+        ping: function(token) {
+          return $http({
+            method: 'POST',
+            url: "/api/ping",
             headers: {
-              'Authorization': "Basic " + token
+              Authorization: "token " + token
             }
           });
         }
@@ -23,52 +43,54 @@
 
   Site.service('Session', function($cookieStore, $http, $rootScope, $q, Api) {
     this.user = null;
-    this.token = null;
     return {
-      generateToken: function(login, password) {
-        return Base64.encode("" + login + ":" + password);
+      generateToken: function(id, token) {
+        return Base64.encode("" + id + ":" + token);
       },
-      login: function(user, token) {
+      login: function(user) {
+        var token;
         this.user = user;
-        this.token = token;
-        $cookieStore.put('session', {
-          user: this.user,
-          token: this.token
-        });
-        $http.defaults.headers.common['Authorization'] = "Basic " + this.token;
+        token = this.generateToken(user.Id, user.AccessToken);
+        $cookieStore.put('session-user', this.user);
+        $http.defaults.headers.common['Authorization'] = "token " + token;
         return $rootScope.$broadcast('session:changed');
       },
       logout: function() {
         this.user = null;
-        this.token = null;
-        $cookieStore.remove('session');
+        $cookieStore.remove('session-user');
         delete $http.defaults.headers.common['Authorization'];
         return $rootScope.$broadcast('session:changed');
       },
-      isAuthenticated: function() {
-        return (this.user != null) && (this.token != null);
+      isLoggedIn: function() {
+        return this.user != null;
       },
       tryCookie: function() {
-        var deferred, error, session, success,
+        var deferred, error, sessionUser, success,
           _this = this;
         deferred = $q.defer();
-        session = $cookieStore.get('session');
-        if (session) {
+        sessionUser = $cookieStore.get('session-user');
+        if (sessionUser) {
           success = function() {
-            _this.login(session.user, session.token);
+            _this.login(sessionUser);
             return deferred.resolve();
           };
           error = function() {
             return deferred.reject();
           };
-          this.validateSession(session).then(success, error);
+          this.validateSession(sessionUser).then(success, error);
         } else {
           deferred.reject();
         }
         return deferred.promise;
       },
-      validateSession: function(session) {
-        return Api.auth.validateToken(session.token);
+      validateSession: function(sessionUser) {
+        var deferred;
+        if (!(sessionUser != null)) {
+          deferred = $q.defer();
+          deferred.reject();
+          return deferred;
+        }
+        return Api.auth.ping(this.generateToken(sessionUser.Id, sessionUser.AccessToken));
       }
     };
   });

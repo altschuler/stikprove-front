@@ -1,8 +1,8 @@
 describe 'form validation', ->
+  VLDT_ERROR_CLS = 'vldt-error'
   hasErr = (elm) -> elm.hasClass VLDT_ERROR_CLS
 
   compile = null
-  VLDT_ERROR_CLS = 'vldt-error'
 
   beforeEach module 'Site'
   beforeEach inject ($compile) ->

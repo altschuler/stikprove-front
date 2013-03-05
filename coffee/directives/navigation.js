@@ -5,22 +5,18 @@
     return {
       restrict: 'A',
       link: function(scope, element, attrs) {
-        var clearance, updateVisibility;
-        clearance = parseInt(attrs.roleNav);
+        var requiredRole, updateVisibility;
+        requiredRole = parseInt(attrs.roleNav);
         updateVisibility = function() {
-          var user;
-          user = Session.user;
-          if (clearance === 0) {
+          if (requiredRole === 0) {
             return element.show();
-          } else if (user != null) {
-            if (clearance === -1) {
-              return element.hide();
-            } else if (user.Role.Id <= clearance) {
-              return element.show();
-            } else {
-              return element.hide();
-            }
-          } else if (clearance === -1) {
+          } else if (Session.isLoggedIn() && requiredRole === -1) {
+            return element.hide();
+          } else if (Session.isLoggedIn() && _.any(Session.user.Roles, function(role) {
+            return role.Id === requiredRole;
+          })) {
+            return element.show();
+          } else if (!Session.isLoggedIn() && requiredRole === -1) {
             return element.show();
           } else {
             return element.hide();

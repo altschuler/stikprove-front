@@ -18,7 +18,11 @@
     }).when('/manage/:page', {
       templateUrl: 'views/manage/index.html',
       controller: 'ManageIndexCtrl',
-      auth: 1
+      auth: 0
+    }).when('/case/create', {
+      templateUrl: 'views/case/create.html',
+      controller: 'CaseCreateCtrl',
+      auth: 0
     }).when('/not-found', {
       templateUrl: 'views/errors/not-found.html',
       auth: 0
@@ -48,7 +52,7 @@
       if (clearance === 0) {
         authorized = true;
       } else if ((clearance != null) && (Session.user != null)) {
-        authorized = Session.user.Role.Id <= clearance;
+
       } else {
         authorized = Session.user != null;
       }
