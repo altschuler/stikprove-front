@@ -9,7 +9,7 @@ Site.directive 'vldt', ->
       for rulePart in rawRule.split(/(?=[:|!])/)
         $.trim rulePart
         switch rulePart.charAt 0
-          when "!" then p.message = $.trim rulePart.substring(1) # its the message
+          when ";" then p.message = $.trim rulePart.substring(1) # its the message
           when ":" then p.param = $.trim rulePart.substring(1) # its the parameter
           else p.type = $.trim rulePart # must be the type
       p

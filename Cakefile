@@ -11,7 +11,7 @@ fs            = require 'fs'
 config =
   srcDir:  'coffee'
   outDir:  'js'
-  inFiles: [ 'config', 'base64', 'controllers/manage', 'controllers/home', 'controllers/case', 'directives/vldt', 'directives/navigation', 'services', 'plugins' ]
+  inFiles: [ 'config', 'base64', 'controllers/manage', 'controllers/home', 'controllers/case', 'controllers/user', 'directives/vldt', 'directives/navigation', 'services', 'plugins' ]
   outFile: 'client'
   yuic:    'C:/Users/Simon/Development/Libraries/Java/yuicompressor-2.4.2.jar'
 

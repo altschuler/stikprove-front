@@ -1,5 +1,5 @@
-Site.value 'BaseURL', 'http://localhost\\:55471'
-
+#Site.value 'BaseURL', 'http://localhost\\:55471'
+Site.value 'BaseURL', 'http://192.168.0.5\\:8080'
 Site.factory 'Utils', ->
   moveElement: (match, fromArr, toArr) ->
     elms = if typeof match is 'object'
@@ -16,14 +16,15 @@ Site.service 'Api', ($http, $resource, BaseURL) ->
   user: $resource BaseURL + '/api/user/:id'
   company: $resource BaseURL + '/api/company/:id'
   userRole: $resource BaseURL + '/api/userrole/:id'
+
   auth:
     login: (name, password) ->
-      $http.post("/api/access/login", {Name:name, Password:password})
+      $http.post("http://192.168.0.5:8080/api/access/login", {Name:name, Password:password})
 
     ping: (token) ->
       $http
         method:'POST'
-        url:"/api/ping"
+        url: "http://192.168.0.5:8080/api/ping"
         headers:
           Authorization: "token #{token}"
 

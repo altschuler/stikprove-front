@@ -1,5 +1,4 @@
 Site.controller 'NavCtrl', ($scope, Session, $location) ->
-
   updateScope = ->
     $scope.data =
       isLoggedIn: Session.isLoggedIn()

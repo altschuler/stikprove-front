@@ -1,0 +1,62 @@
+<div class="tabbable">
+    <ul class="nav nav-tabs">
+        <li id="tab1" ng-class="{active:activePage=='list'}"><a href="#/user/list" data-toggle="tab">Brugere</a></li>
+        <li id="tab2" ng-class="{active:activePage=='create'}"><a href="#/user/create" data-toggle="tab">Opret bruger</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane" ng-class="{active:activePage=='create'}">
+            <form>
+                <input type="text" placeholder="Fornavn..." ng-model="user.FirstName" vldt="req;SKRIV NOGET">
+                <input type="text" placeholder="Efternavn..." ng-model="user.LastName" vldt="req">
+                <input type="text" placeholder="Email..." ng-model="user.Email" vldt="mail">
+                <input type="text" placeholder="Telefon..." ng-model="user.Phone" vldt="req, digit">
+                <input type="text" placeholder="Adgangskode..." class="password-original" ng-model="user.Password" vldt="req, length:6">
+                <input type="text" placeholder="Gentag adgangskode..." vldt="req, match:.password-original">
+
+                <select name="new_user_company" ng-options="company.Id as company.Name for company in companies" ng-model="user.Company.Id" vldt="req">
+                    <option value="">- Company -</option>
+                </select>
+
+                <select ui-select2 name="new_user_role" ng-model="selectedRole" vldt="req">
+                    <option value="">- Role -</option>
+                    <option ng-repeat="role in availableUserRoles" value="{{role.Id}}">
+                        {{role.Name}}
+                    </option>
+                </select>
+                <button ng-click="addRole(selectedRole)" class="btn">Add role</button>
+
+                <ul ng-repeat="role in user.Roles">
+                    <p ng-click="removeRole(role)">{{role.Name}}</p>
+                </ul>
+
+                <input type="submit" class="btn btn-success" value="Opret ny bruger »" ng-click="addUser()">
+            </form>
+        </div>
+        <div class="tab-pane" ng-class="{active:activePage=='list'}">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Fornavn</th>
+                    <th>Efternavn</th>
+                    <th>Email</th>
+                    <th>Telefon</th>
+                    <th>Status</th>
+                    <th>Slet</th>
+                    <th>Redigér</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="user in users">
+                    <td>{{user.FirstName}}</td>
+                    <td>{{user.LastName}}</td>
+                    <td>{{user.Email}}</td>
+                    <td>{{user.Phone}}</td>
+                    <td>{{user.Role.Name}}</td>
+                    <td><i class="icon-trash" ng-click="removeUser(user)"></i></td>
+                    <td><i class="icon-pencil"></i></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

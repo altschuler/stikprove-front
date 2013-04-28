@@ -1,4 +1,3 @@
-#TODO STOP WEBSTORM FILE WATCHERS!
 Site = angular.module('Site', ['ngResource', 'ngCookies'])
 
 # --- ROUTING --- #
@@ -22,6 +21,14 @@ Site.config ($routeProvider, $locationProvider, $httpProvider) ->
       controller:'ManageIndexCtrl'
       auth:0
 
+    .when '/user', # default to list tab
+      redirectTo:'/user/list'
+
+    .when '/user/:page',
+      templateUrl:'views/user/index.html'
+      controller:'UserIndexCtrl'
+      auth:0
+
     .when '/case/create',
       templateUrl:'views/case/create.html'
       controller:'CaseCreateCtrl'
@@ -38,7 +45,6 @@ Site.config ($routeProvider, $locationProvider, $httpProvider) ->
 
 # --- ROUTE AUTHORIZATION --- #
 Site.run ($rootScope, $location, $route, Session) ->
-
   startListening = ->
     $rootScope.$on '$routeChangeStart', (event, current, previous) ->
       # if we are being redirected, don't try to validate the route
@@ -53,13 +59,14 @@ Site.run ($rootScope, $location, $route, Session) ->
 
   # try logging in with cookie data
   Session.tryCookie().then success, error
-  # TODO simplify
+
   validateRoute = (route) ->
     authorized = no
     clearance = route.auth
     if clearance is 0 # 0 means everybody has access
       authorized = yes
     else if clearance? and Session.user?
+      # TODO implement
       ## authorized = Session.user.Role.Id <= clearance
     else # no auth attribute means any authenticated user has access
       authorized = Session.user?
